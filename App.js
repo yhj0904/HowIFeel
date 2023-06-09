@@ -1,21 +1,40 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import Menu from './src/screens/Menu';
+import OutNav from './navigators/OutNav';
+import AuthContext from './src/contexts/AuthContext';
+import Tabs from './navigators/Tabs';
 
 export default function App() {
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(()=> {
+
+    const retrieveLoginState = async () => {
+      try {
+        const value = await AsyncStorage.getItem('isLoggedIn');
+        if (value === 'true') {
+
+          setIsLoggedIn(true);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    retrieveLoginState();
+    },[]);
+
+console.log(isLoggedIn);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn }}>
+    <NavigationContainer>
+     {isLoggedIn ? <Menu /> : <OutNav  /> }
+    </NavigationContainer>
+    </AuthContext.Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
