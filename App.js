@@ -5,7 +5,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Menu from './src/screens/Menu';
 import OutNav from './navigators/OutNav';
 import AuthContext from './src/contexts/AuthContext';
-import Tabs from './navigators/Tabs';
 
 export default function App() {
 

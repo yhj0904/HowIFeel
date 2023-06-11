@@ -1,6 +1,6 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons, AntDesign, Octicons, MaterialIcons } from "@expo/vector-icons";
+import {AntDesign, Octicons, MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import Satistics from "../src/screens/StatisticsScreen";
 import Advice from "../src/screens/AdviceResultScreen";
 import Search from "../src/screens/SearchScreen";
@@ -44,8 +44,9 @@ const Tabs = () => {
         name="Search"
         component={Search}
         options={{
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name={"search-outline"} color={color} size={size} />
+            <MaterialCommunityIcons name= "calendar-search" color={color} size={size} />
           ),
         }}
       />

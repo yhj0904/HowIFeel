@@ -4,7 +4,6 @@ import Login from "../src/screens/Login";
 import Join from "../src/screens/Join";
 import Menu from "../src/screens/Menu";
 import MemberInfoScreen from "../src/screens/MemberInfoScreen";
-import Tabs from "./Tabs";
 
 const Nav = createNativeStackNavigator();
 
@@ -16,6 +15,7 @@ const OutNav = ({ handleLogin }) => (
       headerShown:false,
     }}/>
     <Nav.Screen name="MemberInfoScreen" component={MemberInfoScreen} />
+   
   </Nav.Navigator>
 );
 

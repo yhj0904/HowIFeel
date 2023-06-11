@@ -11,23 +11,26 @@ import {
   Modal,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { Fontisto } from "@expo/vector-icons";
+import { Fontisto, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import AuthContext from '../contexts/AuthContext';
+import AuthContext from "../contexts/AuthContext";
+import { useNavigation } from "@react-navigation/native";
 
 const determineStorageKey = (isLoggedIn) => {
-  return isLoggedIn ? '@LogMedication' : '@medication';
+  return isLoggedIn ? "@LogMedication" : "@medication";
 };
 const MedicationScreen = () => {
   const [medications, setMedications] = useState([]);
   const [medName, setMedName] = useState("");
   const [dosage, setDosage] = useState("");
+  const [uniqueNumber, setUniqueNumber] = useState("");
   const [numberOfDosage, setNumberOfDosage] = useState("1");
   const [selectedTimes, setSelectedTimes] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const { isLoggedIn } = useContext(AuthContext);
   const STORAGE_KEY = determineStorageKey(isLoggedIn);
-
+  const navigation = useNavigation();
+  
   const toggleTimeSelection = (time) => {
     if (selectedTimes.includes(time)) {
       setSelectedTimes(selectedTimes.filter((t) => t !== time));
@@ -35,6 +38,7 @@ const MedicationScreen = () => {
       setSelectedTimes([...selectedTimes, time]);
     }
   };
+
 
   const isTimeSelected = (time) => selectedTimes.includes(time);
 
@@ -58,9 +62,10 @@ const MedicationScreen = () => {
   };
 
   const addMedication = async () => {
-    if (medName && dosage && selectedTimes) {
+    if (medName && selectedTimes) {
       const newMed = Object.assign({}, medications, {
         [Date.now()]: {
+          uniqueNumber,
           medName,
           dosage: parseFloat(dosage).toFixed(1),
           selectedTimes,
@@ -71,6 +76,9 @@ const MedicationScreen = () => {
       await saveMedication(newMed);
       setMedName("");
       setDosage("");
+      setNumberOfDosage("1");
+      setSelectedTimes([]);
+      setUniqueNumber("");
       closeModal();
       Alert.alert("약물이 추가되었습니다.");
     } else {
@@ -101,17 +109,43 @@ const MedicationScreen = () => {
 
   const closeModal = () => {
     setIsModalVisible(false);
+    setMedName("");
+    setDosage("");
+    setNumberOfDosage("1");
+    setSelectedTimes([]);
+    setUniqueNumber("");
   };
+
+  const mediInfo = () => {
+
+  };
+  
+
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>내가 복용 중인 약</Text>
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate("MedicationSearchScreen");
+        }}
+        style={styles.searchButton}
+      >
+        <Ionicons name="search" size={24} color="black" />
+      </TouchableOpacity>
       <TouchableOpacity onPress={openModal} style={styles.addButton}>
         <Text style={styles.buttonText}>추가하기</Text>
       </TouchableOpacity>
 
       <Modal visible={isModalVisible} onRequestClose={closeModal}>
         <View style={styles.modalContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="고유번호"
+            value={uniqueNumber}
+            onChangeText={(text) => setUniqueNumber(text)}
+          />
+
           <TextInput
             style={styles.input}
             placeholder="처방의약품 명칭"
@@ -125,7 +159,7 @@ const MedicationScreen = () => {
             value={dosage}
             onChangeText={(text) => setDosage(text)}
           />
-          <Text style={styles.label}>1회 복용량</Text>
+          <Text style={styles.label}>1회 복용량(알)</Text>
           <Picker
             style={styles.picker}
             selectedValue={numberOfDosage}
@@ -194,6 +228,9 @@ const MedicationScreen = () => {
         {Object.keys(medications).map((key) =>
           medications[key].key !== null ? (
             <View key={key} style={styles.medicationContainer}>
+              <TouchableOpacity onPress={() => { mediInfo }}>
+                <MaterialCommunityIcons name="pill" size={35} color="black" />
+              </TouchableOpacity>
               <View>
                 <Text style={styles.medicationText}>
                   {medications[key].medName}
@@ -301,7 +338,7 @@ const styles = StyleSheet.create({
   medicationContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
     marginTop: 20,
     marginBottom: 20,
     paddingHorizontal: 20,
@@ -331,9 +368,14 @@ const styles = StyleSheet.create({
   },
   noMedicationText: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 20,
-    color: '#999',
+    color: "#999",
+  },
+  searchButton: {
+    position: "absolute",
+    right: 16,
+    top: 16,
   },
 });
 
