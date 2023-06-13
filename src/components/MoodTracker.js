@@ -43,6 +43,7 @@ export default function MoodTracker({
 
   const moods = ["😭", "😕", "😐", "🙂", "😍"];
 
+  
   const onChangeText = (payload) => setDiary(payload);
 
   useEffect(() => {
@@ -69,7 +70,7 @@ export default function MoodTracker({
 
   const addToDo = async () => {
     setAddModalVisible(false);
-
+    serverSaveTodos();
     if (diary === "") {
       return;
     }
@@ -81,7 +82,7 @@ export default function MoodTracker({
     await saveToDos(newToDos);
     setDiary("");
     updateSelectedDates(date);
-    serverSaveTodos();
+   
   };
 
   const deleteToDo = (key) => {
@@ -359,7 +360,6 @@ export default function MoodTracker({
               onChangeText={onChangeText}
               returnKeyType="done"
               style={styles.diaryInput}
-              multiline={true}
               numberOfLines={4}
               value={diary}
             />

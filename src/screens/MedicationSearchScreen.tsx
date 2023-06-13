@@ -102,7 +102,7 @@ const MedicationSearchScreen = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          keyword: search,
+          drugName : search,
         }),
       })
         .then((response) => response.json())
@@ -200,7 +200,7 @@ const MedicationSearchScreen = () => {
         </TouchableOpacity>
             </View>
         )}
-        keyExtractor={(item) => item.drugCode.toString()} // Assuming drugCode is a unique identifier, change it accordingly if necessary
+      //  keyExtractor={(item) => item.drugCode.toString()} // Assuming drugCode is a unique identifier, change it accordingly if necessary
       />
 
       
