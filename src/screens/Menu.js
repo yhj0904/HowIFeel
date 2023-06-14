@@ -9,7 +9,7 @@ import MemberInfoScreen from './MemberInfoScreen.js';
 import 'react-native-gesture-handler';
 import Tabs from '../../navigators/Tabs.js';
 import MediNav from '../../navigators/MediNav.js';
-
+import Triple from '../screens/Triple';
 
 function MyInfoScreen() {
   const { isLoggedIn } = useContext(AuthContext);
@@ -29,9 +29,11 @@ export default function Menu() {
     <Drawer.Navigator initialRouteName="Home">
       <Drawer.Screen name="Home 🏡" component={Tabs} />
       <Drawer.Screen name="약물관리 💊" component={MediNav} />
-      <Drawer.Screen name="챗봇 🤖" component={Chatbot} />
       <Drawer.Screen name="내정보 📋" component={MyInfoScreen} />
-      <Drawer.Screen name="문의하기 ✉️" component={ContactUs} />
+      <Drawer.Screen name="문의하기 ✉️" component={Triple} />
     </Drawer.Navigator>
   );
 }
+
+//<Drawer.Screen name="챗봇 🤖" component={Chatbot} />
+//

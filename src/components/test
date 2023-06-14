@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
-import { Calendar, DotMarking } from "react-native-calendars";
+import { Calendar } from "react-native-calendars";
 import MoodTracker from "./MoodTracker.js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthContext from "../contexts/AuthContext";
@@ -18,9 +18,7 @@ export default function MyCalendar() {
 
   useEffect(() => {
     loadToDos();
-  }, [selectedDate]);
-
-  console.log("rander")
+  }, [selectedDates]);
 
   const handleDateSelect = (date) => {
     setSelectedDate(date.dateString);
@@ -33,7 +31,10 @@ export default function MyCalendar() {
 
   const loadToDos = async () => {
     try {
-      const ds = await AsyncStorage.getItem(STORAGE_KEY);
+      // const s = await AsyncStorage.getItem("@member");
+      // const memberInfo = JSON.parse(s);
+      //  setMemberInfo(memberInfo);
+      const ds = await AsyncStorage.getItem(STORAGE_KEY); // 저장된 내용 불러오기
       const loadedToDos = JSON.parse(ds);
       setTodos(loadedToDos || {});
     } catch (e) {
@@ -41,42 +42,29 @@ export default function MyCalendar() {
     }
   };
 
-  const getMarkedDates = () => {
-    const markedDates = {};
-  
-    Object.values(todos).forEach((todo) => {
-      if (!markedDates[todo.date]) {
-        markedDates[todo.date] = {};
-      }
-  
-      if (!markedDates[todo.date].dots) {
-        markedDates[todo.date].dots = [];
-      }
-  
-      markedDates[todo.date].dots.push({
-        key: todo.id,
-        color: "red",
-        selectedColor: "blue",
-      });
-  
-      markedDates[todo.date].selected = selectedDate === todo.date;
-      markedDates[todo.date].selectedColor = "blue";
-    });
-  
-    return markedDates;
-  };
+  console.log(Object.values(todos).map((todo) => todo.date));
 
   return (
     <View style={styles.container}>
       <Calendar
         style={styles.calendar}
         onDayPress={handleDateSelect}
-        markingType={"multi-dot"}
-        markedDates={{[selectedDate]: {
+        markedDates={{
+          [selectedDate]: {
             selected: true,
             dotColor: "blue",
             selectedDotColor: "blue",
-          }, ...getMarkedDates()}}
+          },
+          ...Object.values(todos).reduce((markedDates, todo) => {
+            markedDates[todo.date] = {
+              marked: true,
+              dotColor: "red",
+              selected: selectedDate === todo.date,
+              selectedDotColor: "blue",
+            };
+            return markedDates;
+          }, {}),
+        }}
       />
       {selectedDate && (
         <MoodTracker

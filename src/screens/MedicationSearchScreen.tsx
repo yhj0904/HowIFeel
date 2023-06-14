@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -47,7 +47,7 @@ const determineStorageKey = (isLoggedIn) => {
 
 const MedicationSearchScreen = () => {
   const [search, setSearch] = useState("");
-  const [medications, setMedications] = useState([]);
+  const [medications, setMedications] = useState({});
   const [medName, setMedName] = useState("");
   const [dosage, setDosage] = useState("");
   const [uniqueNumber, setUniqueNumber] = useState("");
@@ -56,7 +56,6 @@ const MedicationSearchScreen = () => {
   const [sideEffect, setSideEffect] = useState("");
   const [cautionInfo, setCautionInfo] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-
   const [numberOfDosage, setNumberOfDosage] = useState("1");
   const [selectedTimes, setSelectedTimes] = useState([]);
   const [mediInfoModalVisible, setMediInfoModalVisible] = useState(false);
@@ -64,7 +63,13 @@ const MedicationSearchScreen = () => {
   const { isLoggedIn } = useContext(AuthContext);
   const STORAGE_KEY = determineStorageKey(isLoggedIn);
 
+  useEffect(() => {
+    loadMedication();
+  }, []);
+
+
   const onSubmit = () => {
+    setSearchResults([]);
     if (search === "") {
       return;
     }
@@ -81,19 +86,21 @@ const MedicationSearchScreen = () => {
       })
         .then((response) => response.json())
         .then((data) => {
-          setSearchResults([data.result]);
-          setUniqueNumber(data.result.drugCode);
-          setMedName(data.result.drugName);
-          setTakeToMedi(data.result.drugHowTake);
-          setEntpName(data.result.drugEntpName);
-          setSideEffect(data.result.drugSideEffect);
-          setCautionInfo(data.result.drugWarn);
-          console.log("API response:", data);
-          console.log(searchResults);
+          if (data && data.result) {
+            setSearchResults([data.result]);
+            setUniqueNumber(data.result.drugCode);
+            setMedName(data.result.drugName);
+            setTakeToMedi(data.result.drugHowTake);
+            setEntpName(data.result.drugEntpName);
+            setSideEffect(data.result.drugSideEffect);
+            setCautionInfo(data.result.drugWarn);
+            console.log("API response:", data);
+          } else {
+            Alert.alert("해당하는 약물 코드는 존재하지 않습니다.");
+          }
         })
         .catch((error) => {
           console.error("API error:", error);
-          
         });
     } else {
       fetch(`http://3.37.226.225:10021/api/drug/search`, {
@@ -102,19 +109,24 @@ const MedicationSearchScreen = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          drugName : search,
+          drugName: search,
         }),
       })
         .then((response) => response.json())
         .then((data) => {
-          setSearchResults([data.result]);
-          setUniqueNumber(data.result.drugCode);
-          setMedName(data.result.drugName);
-          setTakeToMedi(data.result.drugHowTake);
-          setEntpName(data.result.drugEntpName);
-          setSideEffect(data.result.drugSideEffect);
-          setCautionInfo(data.result.drugWarn);
-          console.log("API response:", data);
+          if (data && data.result) {
+            setSearchResults((prevResults) => [...prevResults, ...data.result]);
+            setUniqueNumber(data.result.drugCode);
+            setMedName(data.result.drugName);
+            setTakeToMedi(data.result.drugHowTake);
+            setEntpName(data.result.drugEntpName);
+            setSideEffect(data.result.drugSideEffect);
+            setCautionInfo(data.result.drugWarn);
+            console.log("API response:", data);
+          } else {
+            // Display an alert or modal for "Drug name does not exist"
+            Alert.alert("해당하는 약물 이름은 존재하지 않습니다.");
+          }
         })
         .catch((error) => {
           console.error("API error:", error);
@@ -124,6 +136,17 @@ const MedicationSearchScreen = () => {
   };
 
   console.log(search);
+
+  const loadMedication = async () => {
+    try {
+      const s = await AsyncStorage.getItem(STORAGE_KEY);
+      if (s !== null) {
+        setMedications(JSON.parse(s));
+      }
+    } catch (error) {
+      console.log("Error loading medication:", error);
+    }
+  };
 
   const toggleTimeSelection = (time) => {
     if (selectedTimes.includes(time)) {
@@ -140,7 +163,7 @@ const MedicationSearchScreen = () => {
   };
 
   const addMedication = async () => {
-    if (medName && dosage && selectedTimes) {
+    if (medName && selectedTimes) {
       const newMed = Object.assign({}, medications, {
         [Date.now()]: {
           uniqueNumber,
@@ -154,11 +177,23 @@ const MedicationSearchScreen = () => {
       await saveMedication(newMed);
       setMedName("");
       setDosage("");
-      setIsModalVisible(false);
+      setNumberOfDosage("1");
+      setSelectedTimes([]);
+      setUniqueNumber("");
+      closeModal();
       Alert.alert("약물이 추가되었습니다.");
     } else {
       Alert.alert("모든 항목을 입력해주세요.");
     }
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+    setMedName("");
+    setDosage("");
+    setNumberOfDosage("1");
+    setSelectedTimes([]);
+    setUniqueNumber("");
   };
   return (
     <Container>
@@ -170,40 +205,46 @@ const MedicationSearchScreen = () => {
         onChangeText={(text) => setSearch(text)}
         onSubmitEditing={onSubmit}
       />
-     
-      
+
       <FlatList
         data={searchResults}
         renderItem={({ item }) => (
           <View style={styles.medicationContainer}>
             <View>
-            <Text style={styles.medicationText}>고유번호: {item.drugCode}</Text>
-            <Text style={styles.medicationText}>약 이름: {item.drugName}</Text>
-            <Text style={styles.medicationText}>
-              제조사: {item.drugEntpName}
-            </Text>
+              <Text style={styles.medicationText}>
+                고유번호: {item.drugCode}
+              </Text>
+              <Text style={styles.medicationText}>
+                약 이름: {item.drugName}
+              </Text>
+              <Text style={styles.medicationText}>
+                제조사: {item.drugEntpName}
+              </Text>
             </View>
             <TouchableOpacity
-          onPress={() => {
-            setMediInfoModalVisible(true);
-          }}
-        >
-          <FontAwesome name="list" size={24} color="grey" />
-        </TouchableOpacity>
+              onPress={() => {
+                setMediInfoModalVisible(true);
+                setTakeToMedi(item.drugHowTake);
+          setSideEffect(item.drugSideEffect);
+          setCautionInfo(item.drugWarn);
+              }}
+            >
+              <FontAwesome name="list" size={24} color="grey" />
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => {
-            setIsModalVisible(true);
-          }}
-        >
-          <FontAwesome5 name="briefcase-medical" size={24} color="grey" />
-        </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={() => {
+                setIsModalVisible(true);
+                setMedName(item.drugName);
+                setUniqueNumber(item.drugCode);
+              }}
+            >
+              <FontAwesome5 name="briefcase-medical" size={24} color="grey" />
+            </TouchableOpacity>
+          </View>
         )}
-      //  keyExtractor={(item) => item.drugCode.toString()} // Assuming drugCode is a unique identifier, change it accordingly if necessary
+        keyExtractor={(item) => item.drugCode} // (필요 시 수정) 각 항목의 고유 키 지정
       />
-
-      
 
       <Modal
         animationType="fade"
@@ -212,15 +253,9 @@ const MedicationSearchScreen = () => {
       >
         <ModalContainer>
           <ModalContent>
-            <Text style={styles.medicationText}>
-              {takeToMedi}
-            </Text>
-            <Text style={styles.medicationText}>
-            {sideEffect}
-            </Text>
-            <Text style={styles.medicationText}>
-            {cautionInfo}
-            </Text>
+            <Text style={styles.medicationText}>{takeToMedi}</Text>
+            <Text style={styles.medicationText}>{sideEffect}</Text>
+            <Text style={styles.medicationText}>{cautionInfo}</Text>
 
             <TouchableOpacity
               onPress={() => {
@@ -316,7 +351,7 @@ const MedicationSearchScreen = () => {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
-              setIsModalVisible(false);
+              closeModal();
             }}
             style={styles.cancelButton}
           >
@@ -332,7 +367,7 @@ const styles = StyleSheet.create({
   medicationContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
     marginTop: 20,
     paddingHorizontal: 20,
     paddingVertical: 12,

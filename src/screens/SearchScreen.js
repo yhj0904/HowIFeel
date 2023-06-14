@@ -60,7 +60,7 @@ const Search = () => {
   const [showDiaryModalVisible, setShowDiaryModalVisible] = useState(false);
   const { isLoggedIn } = useContext(AuthContext);
   const STORAGE_KEY = determineStorageKey(isLoggedIn);
-  const moods = ["😭", "😕", "😐", "🙂", "😍"];
+  const moods = ["😱", "😧", "😡", "😢", "😐", "😄", "🤢"];
   const onChangeText = (payload) => setDiary(payload);
 
   useEffect(() => {
@@ -111,14 +111,14 @@ const Search = () => {
   const editToDo = () => {
     if (selectedTodo) {
       const newToDos = { ...toDos };
-      newToDos[selectedTodo] = { ...newToDos[selectedTodo], diary, mood };
+      newToDos[selectedTodo] = { ...newToDos[selectedTodo], diary};
       setTodos(newToDos);
       saveToDos(newToDos);
       setSelectedTodo(null);
       setEditModalVisible(false);
     }
   };
-  
+
   const serverEditTodos = () => {
     fetch(`http://3.37.226.225:10021/api/journal/edit`, {
         method: "POST",
@@ -170,7 +170,7 @@ const Search = () => {
 
   const allTodo = () => {
     const results =
-      searchResults.length > 0 ? searchResults : Object.keys(toDos);
+      searchResults.length > 0 ? (searchResults) : (Object.keys(toDos));
     return (
       <SearchResult>
         <View style={{ justifyContent: "center", alignItems: "center" }}>
@@ -185,7 +185,7 @@ const Search = () => {
               <View key={key}>
                 <DateText>{toDos[key].date}</DateText>
                 <View style={styles.toDo} key={key}>
-                  <Text style={{ fontSize: 36 }}>{moods[toDos[key].mood]}</Text>
+                  <Text style={{ fontSize: 36 }}>{moods[toDos[key].analysis]}</Text>
                   <View style={styles.buttonKey}>
                     <TouchableOpacity onPress={() => checkdiary(key)}>
                       <MaterialCommunityIcons
@@ -198,7 +198,7 @@ const Search = () => {
                       <Entypo name="pencil" size={24} color="grey" />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => deleteToDo(key)}>
-                      <Fontisto name="trash" size={16} color="grey" />
+                      <Fontisto name="trash" size={24} color="grey" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -210,30 +210,29 @@ const Search = () => {
   };
 
   const onSubmit = () => {
-    fetch(`http://3.37.226.225:10021/api/journal/search`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        emailId : memberInfo.email,
-        date : date, 
-        analysis : diary,
-        mood : mood,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setAnalysis(data.analysis);
-        setdiaryUniqNum(data.id);
-        console.log("API response:", data);
+      fetch(`http://3.37.226.225:10021/api/journal/search`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          emailId : memberInfo.email,
+          date : searchQuery, 
+          analysis : mood,
+        }),
       })
-      .catch((error) => {
-        console.error("API error:", error);
-      });
+        .then((response) => response.json())
+        .then((data) => {
+          setSearchResults((prevResults) => [...prevResults, ...data.result])
+          console.log("API response:", data);
+         
+        })
+        .catch((error) => {
+          console.error("API error:", error);
+        });
   };
-  
 
+  console.log(searchResults)
   const batchQuery = () => {
     
   }
@@ -289,15 +288,7 @@ const Search = () => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
-            <Text style={styles.modalHeader}>오늘의 기분은 어떤가요?</Text>
-            <ButtonGroup
-              buttons={moods}
-              containerStyle={{ height: 50, borderRadius: 10 }}
-              onPress={(index) => setMood(index)}
-              selectedIndex={mood}
-            />
             <Text style={styles.modalHeader}>일지를 작성해보세요:</Text>
-
             <TextInput
               onChangeText={onChangeText}
               returnKeyType="done"

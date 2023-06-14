@@ -9,7 +9,7 @@ import {
   Alert,
   Dimensions,
 } from "react-native";
-import { Fontisto, MaterialCommunityIcons, Entypo } from "@expo/vector-icons";
+import { Fontisto, MaterialCommunityIcons, Entypo, MaterialIcons  } from "@expo/vector-icons";
 import { Header, Text, ButtonGroup, Button } from "react-native-elements";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthContext from "../contexts/AuthContext";
@@ -35,13 +35,13 @@ export default function MoodTracker({
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [showDiaryModalVisible, setShowDiaryModalVisible] = useState(false);
   const [memberInfo, setMemberInfo] = useState({});
-  const [analysis, setAnalysis] = useState({});
+  const [analysis, setAnalysis] = useState("");
   const [diaryUniqNum, setdiaryUniqNum] = useState({});
   const { isLoggedIn } = useContext(AuthContext);
   const STORAGE_KEY = determineStorageKey(isLoggedIn);
   const STORAGE_KEY2 = determineStorageKey2(isLoggedIn);
 
-  const moods = ["😭", "😕", "😐", "🙂", "😍"];
+  const moods = ["😱", "😧", "😡", "😢", "😐", "😄", "🤢"];
 
   
   const onChangeText = (payload) => setDiary(payload);
@@ -67,21 +67,43 @@ export default function MoodTracker({
       setTodos({});
     }
   };
+  
 
   const addToDo = async () => {
+   
     setAddModalVisible(false);
-    serverSaveTodos();
+ 
     if (diary === "") {
       return;
     }
-    const newToDos = Object.assign({}, toDos, {
-      [Date.now()]: { diary, mood, date, analysis },
-    }); // , 찍고 일 추가 .기분은 , 찍고 기분 변수 추가.F
-
-    setTodos(newToDos);
-    await saveToDos(newToDos);
-    setDiary("");
-    updateSelectedDates(date);
+    fetch(`http://3.37.226.225:10021/api/journal/save`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        emailId : memberInfo.email,
+        date : date, 
+        content : diary,
+      }),
+    })
+      .then((response) => response.json())
+      .then(async (data) => {
+        const newToDos = {
+          ...toDos,
+          [Date.now()]: { diary, date, analysis: data.analysis, id:data.id },
+        };
+        setTodos(newToDos);
+        await saveToDos(newToDos);
+        setDiary("");
+        updateSelectedDates(date);
+        setdiaryUniqNum(data.id);
+        console.log("API response:", data);
+      })
+      .catch((error) => {
+        console.error("API error:", error);
+      });
+    
    
   };
 
@@ -96,6 +118,7 @@ export default function MoodTracker({
           setTodos(newToDos);
           saveToDos(newToDos);
           serverdelTodos();
+          updateSelectedDates(date);
           Alert.alert("기록이 삭제되었습니다.");
         },
       },
@@ -112,7 +135,7 @@ export default function MoodTracker({
   const editToDo = () => {
     if (selectedTodo) {
       const newToDos = { ...toDos };
-      newToDos[selectedTodo] = { ...newToDos[selectedTodo], diary, mood };
+      newToDos[selectedTodo] = { ...newToDos[selectedTodo], diary };
       setTodos(newToDos);
       saveToDos(newToDos);
       setSelectedTodo(null);
@@ -123,30 +146,6 @@ export default function MoodTracker({
 
   const serverLoadTodos = () => {
     fetch(`http://3.37.226.225:10021/api/journal/load`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          emailId : memberInfo.email,
-          date : date, 
-          content : diary,
-          mood : mood,
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          setAnalysis(data.analysis);
-          setdiaryUniqNum(data.id);
-          console.log("API response:", data);
-        })
-        .catch((error) => {
-          console.error("API error:", error);
-        });
-  }
-
-  const serverSaveTodos = () => {
-    fetch(`http://3.37.226.225:10021/api/journal/save`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -234,30 +233,23 @@ export default function MoodTracker({
         }}
       />
       <ScrollView>
-        <View style={styles.mood}>
-          <ButtonGroup
-            buttons={moods}
-            containerStyle={{ height: 50, borderRadius: 10 }}
-            onPress={(index) => setMood(index)}
-            selectedIndex={mood}
-          />
-          <Button
-            title="작성하기"
-            onPress={() => setAddModalVisible(true)}
-            buttonStyle={{ backgroundColor: "#2c3e50", marginTop: 5 }}
-          />
-        </View>
-
+       
         <View style={styles.log}>
-          <Text h4 style={{ textAlign: "center", marginBottom: 10 }}>
+          <View style={{  textAlign: "center", flexDirection: "row",  justifyContent: "space-between", }} >          
+            <Text h4 style={{  marginBottom: 10 }}>
             {" "}
             {date}
           </Text>
+          <TouchableOpacity onPress={() => setAddModalVisible(true)}>
+          <MaterialIcons name="add-comment" size={37} color="grey" />
+                  </TouchableOpacity>
+                  </View>
 
           {Object.keys(toDos).map((key) =>
             toDos[key].date === date ? (
               <View style={styles.toDo} key={key}>
-                <Text style={{ fontSize: 36 }}>{moods[toDos[key].mood]}</Text>
+                
+                <Text style={{ fontSize: 36 }}>{moods[toDos[key].analysis]}</Text>
                 <View style={styles.buttonKey}>
                   <TouchableOpacity onPress={() => checkdiary(key)}>
                     <MaterialCommunityIcons
@@ -271,7 +263,7 @@ export default function MoodTracker({
                   </TouchableOpacity>
 
                   <TouchableOpacity onPress={() => deleteToDo(key)}>
-                    <Fontisto name="trash" size={16} color="grey" />
+                    <Fontisto name="trash" size={24} color="grey" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -292,9 +284,6 @@ export default function MoodTracker({
               <Text style={styles.diaryText}>
                 {selectedTodo && toDos[selectedTodo]?.diary}
               </Text>
-              <Text style={styles.diaryText}>
-              {selectedTodo && toDos[selectedTodo]?.analysis}
-              </Text>
             </ScrollView>
             <Button
               title="닫기"
@@ -309,13 +298,6 @@ export default function MoodTracker({
       <Modal animationType="slide" transparent={true} visible={addModalVisible}>
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
-            <Text style={styles.modalHeader}>오늘의 기분은 어떤가요?</Text>
-            <ButtonGroup
-              buttons={moods}
-              containerStyle={{ height: 50, borderRadius: 10 }}
-              onPress={(index) => setMood(index)}
-              selectedIndex={mood}
-            />
             <Text style={styles.modalHeader}>일지를 작성해보세요:</Text>
 
             <TextInput
@@ -347,13 +329,7 @@ export default function MoodTracker({
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
-            <Text style={styles.modalHeader}>오늘의 기분은 어떤가요?</Text>
-            <ButtonGroup
-              buttons={moods}
-              containerStyle={{ height: 50, borderRadius: 10 }}
-              onPress={(index) => setMood(index)}
-              selectedIndex={mood}
-            />
+          
             <Text style={styles.modalHeader}>일지를 작성해보세요:</Text>
 
             <TextInput
@@ -408,6 +384,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     backgroundColor: "#fff",
+    
     shadowColor: "#000",
     shadowOffset: {
       width: 0,

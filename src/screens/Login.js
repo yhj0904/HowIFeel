@@ -93,9 +93,11 @@ const Login = ({ navigation: { navigate } }) => {
           }
         } else if (data.code === "10") {
           Alert.alert("비밀번호가 일치 하지 않습니다.");
+          setLoading(false);
           return;
         }else if (data.code === "11") {
           Alert.alert("등록된 이메일이 없습니다.");
+          setLoading(false);
           return;
         }
         console.log(data);

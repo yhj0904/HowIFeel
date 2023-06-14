@@ -25,6 +25,7 @@ const Tabs = () => {
         name="Satistics"
         component={Satistics}
         options={{
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Octicons name="graph" color={color} size={size} />
           ),
@@ -34,6 +35,7 @@ const Tabs = () => {
         name="Advice"
         component={Advice}
         options={{
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="healing" color={color} size={size} />
           ),

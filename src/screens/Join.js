@@ -79,6 +79,8 @@ const Join = ({ navigation: { navigate } }) => {
           setLoading(false);
         } else if (data.code === "10") {
           Alert.alert("해당 이메일 계정은 이미 존재 합니다.");
+          setLoading(false);
+          return;
         }
         console.log(data);
       })

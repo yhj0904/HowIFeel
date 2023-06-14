@@ -11,22 +11,40 @@ import {
   Modal,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { Fontisto, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import styled from "styled-components/native";
+import { Fontisto, Ionicons, MaterialCommunityIcons,FontAwesome5 } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthContext from "../contexts/AuthContext";
 import { useNavigation } from "@react-navigation/native";
+
+const ModalContainer = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+`;
+
+const ModalContent = styled.View`
+  alignitems: center;
+  justifycontent: space-between;
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+`;
 
 const determineStorageKey = (isLoggedIn) => {
   return isLoggedIn ? "@LogMedication" : "@medication";
 };
 const MedicationScreen = () => {
-  const [medications, setMedications] = useState([]);
+  const [medications, setMedications] = useState({});
   const [medName, setMedName] = useState("");
   const [dosage, setDosage] = useState("");
   const [uniqueNumber, setUniqueNumber] = useState("");
   const [numberOfDosage, setNumberOfDosage] = useState("1");
   const [selectedTimes, setSelectedTimes] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [mediInfoModalVisible, setMediInfoModalVisible] = useState(false);
   const { isLoggedIn } = useContext(AuthContext);
   const STORAGE_KEY = determineStorageKey(isLoggedIn);
   const navigation = useNavigation();
@@ -45,7 +63,8 @@ const MedicationScreen = () => {
   useEffect(() => {
     loadMedication();
   }, []);
-
+console.log(medications)
+console.log("randermediscreen")
   const saveMedication = async (toSave) => {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
   };
@@ -117,7 +136,28 @@ const MedicationScreen = () => {
   };
 
   const mediInfo = () => {
+    setMediInfoModalVisible(true);
+    <Modal
+    animationType="fade"
+    transparent={true}
+    visible={mediInfoModalVisible}
+  >
+    <ModalContainer>
+      <ModalContent>
+        <Text style={styles.medicationText}>{takeToMedi}</Text>
+        <Text style={styles.medicationText}>{sideEffect}</Text>
+        <Text style={styles.medicationText}>{cautionInfo}</Text>
 
+        <TouchableOpacity
+          onPress={() => {
+            setMediInfoModalVisible(false);
+          }}
+        >
+          <FontAwesome5 name="window-close" size={24} color="black" />
+        </TouchableOpacity>
+      </ModalContent>
+    </ModalContainer>
+  </Modal>
   };
   
 
