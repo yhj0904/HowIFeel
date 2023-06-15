@@ -32,7 +32,7 @@ const Tabs = () => {
         }}
       />
       <Tab.Screen
-        name="Advice"
+        name="Control"
         component={Advice}
         options={{
           headerShown: false,

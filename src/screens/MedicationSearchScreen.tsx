@@ -67,7 +67,6 @@ const MedicationSearchScreen = () => {
     loadMedication();
   }, []);
 
-
   const onSubmit = () => {
     setSearchResults([]);
     if (search === "") {
@@ -195,6 +194,7 @@ const MedicationSearchScreen = () => {
     setSelectedTimes([]);
     setUniqueNumber("");
   };
+
   return (
     <Container>
       <SearchBar
@@ -225,8 +225,8 @@ const MedicationSearchScreen = () => {
               onPress={() => {
                 setMediInfoModalVisible(true);
                 setTakeToMedi(item.drugHowTake);
-          setSideEffect(item.drugSideEffect);
-          setCautionInfo(item.drugWarn);
+                setSideEffect(item.drugSideEffect);
+                setCautionInfo(item.drugWarn);
               }}
             >
               <FontAwesome name="list" size={24} color="grey" />

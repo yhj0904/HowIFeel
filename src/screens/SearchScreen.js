@@ -10,6 +10,7 @@ import {
   Alert,
   TextInput,
   Button,
+  FlatList,
 } from "react-native";
 import { ButtonGroup } from "react-native-elements";
 import { Fontisto, MaterialCommunityIcons, Entypo } from "@expo/vector-icons";
@@ -84,7 +85,6 @@ const Search = () => {
     }
   };
 
-
   const deleteToDo = (key) => {
     Alert.alert("delete To Do?", "are you sure?", [
       { text: "Cancel" },
@@ -111,7 +111,7 @@ const Search = () => {
   const editToDo = () => {
     if (selectedTodo) {
       const newToDos = { ...toDos };
-      newToDos[selectedTodo] = { ...newToDos[selectedTodo], diary};
+      newToDos[selectedTodo] = { ...newToDos[selectedTodo], diary };
       setTodos(newToDos);
       saveToDos(newToDos);
       setSelectedTodo(null);
@@ -121,27 +121,27 @@ const Search = () => {
 
   const serverEditTodos = () => {
     fetch(`http://3.37.226.225:10021/api/journal/edit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          emailId : memberInfo.email,
-          id : diaryUniqNum,
-          date : date, 
-          content : diary ,
-          mood : mood,
-        }),
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        emailId: memberInfo.email,
+        id: diaryUniqNum,
+        date: date,
+        content: diary,
+        mood: mood,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setAnalysis(data.analysis);
+        console.log("API response:", data);
       })
-        .then((response) => response.json())
-        .then((data) => {
-          setAnalysis(data.analysis)
-          console.log("API response:", data);
-        })
-        .catch((error) => {
-          console.error("API error:", error);
-        });
-  }
+      .catch((error) => {
+        console.error("API error:", error);
+      });
+  };
 
   const serverdelTodos = (key) => {
     fetch(`http://3.37.226.225:10021/api/journal/delete`, {
@@ -150,8 +150,8 @@ const Search = () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        emailId : memberInfo.email,
-        id : diaryUniqNum,
+        emailId: memberInfo.email,
+        id: diaryUniqNum,
       }),
     })
       .then((response) => response.json())
@@ -161,7 +161,7 @@ const Search = () => {
       .catch((error) => {
         console.error("API error:", error);
       });
-  }
+  };
 
   const checkdiary = (key) => {
     setSelectedTodo(key);
@@ -170,7 +170,7 @@ const Search = () => {
 
   const allTodo = () => {
     const results =
-      searchResults.length > 0 ? (searchResults) : (Object.keys(toDos));
+      searchResults.length > 0 ? searchResults : Object.keys(toDos);
     return (
       <SearchResult>
         <View style={{ justifyContent: "center", alignItems: "center" }}>
@@ -185,7 +185,9 @@ const Search = () => {
               <View key={key}>
                 <DateText>{toDos[key].date}</DateText>
                 <View style={styles.toDo} key={key}>
-                  <Text style={{ fontSize: 36 }}>{moods[toDos[key].analysis]}</Text>
+                  <Text style={{ fontSize: 36 }}>
+                    {moods[toDos[key].analysis]}
+                  </Text>
                   <View style={styles.buttonKey}>
                     <TouchableOpacity onPress={() => checkdiary(key)}>
                       <MaterialCommunityIcons
@@ -209,33 +211,72 @@ const Search = () => {
     );
   };
 
-  const onSubmit = () => {
-      fetch(`http://3.37.226.225:10021/api/journal/search`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          emailId : memberInfo.email,
-          date : searchQuery, 
-          analysis : mood,
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          setSearchResults((prevResults) => [...prevResults, ...data.result])
-          console.log("API response:", data);
-         
-        })
-        .catch((error) => {
-          console.error("API error:", error);
-        });
+  const searchToDos = () => {
+    return (
+      <SearchResult>
+        <View style={{ justifyContent: "center", alignItems: "center" }}>
+          <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
+            검색 결과
+          </Text>
+        </View>
+        <FlatList
+          data={searchResults}
+          renderItem={({ item }) => (
+            <View style={styles.log}>
+              <View>
+                <DateText>{item.date}</DateText>
+                <View style={styles.toDo}>
+                  <Text style={{ fontSize: 36 }}>{moods[item.analysis]}</Text>
+                  <View style={styles.buttonKey}>
+                    <TouchableOpacity onPress={() => checkdiary(key)}>
+                      <MaterialCommunityIcons
+                        name="book-open-variant"
+                        size={24}
+                        color="grey"
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => updateToDo(key)}>
+                      <Entypo name="pencil" size={24} color="grey" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => deleteToDo(key)}>
+                      <Fontisto name="trash" size={24} color="grey" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
+          keyExtractor={(item) => item.drugCode} // (필요 시 수정) 각 항목의 고유 키 지정
+        />
+      </SearchResult>
+    );
   };
 
-  console.log(searchResults)
-  const batchQuery = () => {
-    
-  }
+  const onSubmit = () => {
+    fetch(`http://3.37.226.225:10021/api/journal/search`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        emailId: memberInfo.email,
+        date: searchQuery,
+        analysis: mood,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setSearchResults([]);
+        setSearchResults((prevResults) => [...prevResults, ...data.result]);
+        console.log("API response:", data);
+      })
+      .catch((error) => {
+        console.error("API error:", error);
+      });
+  };
+
+  console.log(searchResults);
+  const batchQuery = () => {};
 
   return (
     <Container>
@@ -256,7 +297,9 @@ const Search = () => {
         onSubmitEditing={onSubmit}
       />
 
-      <SearchResultsContainer>{allTodo()}</SearchResultsContainer>
+      <SearchResultsContainer>
+        {searchResults.length > 0 ? searchToDos() : allTodo()}
+      </SearchResultsContainer>
 
       <Modal
         animationType="fade"

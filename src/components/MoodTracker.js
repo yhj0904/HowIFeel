@@ -36,6 +36,7 @@ export default function MoodTracker({
   const [showDiaryModalVisible, setShowDiaryModalVisible] = useState(false);
   const [memberInfo, setMemberInfo] = useState({});
   const [analysis, setAnalysis] = useState("");
+  const [serverLoadTodo, setServerLoadTodo] = useState([]);
   const [diaryUniqNum, setdiaryUniqNum] = useState({});
   const { isLoggedIn } = useContext(AuthContext);
   const STORAGE_KEY = determineStorageKey(isLoggedIn);
@@ -152,15 +153,12 @@ export default function MoodTracker({
         },
         body: JSON.stringify({
           emailId : memberInfo.email,
-          date : date, 
-          content : diary,
-          mood : mood,
+        
         }),
       })
         .then((response) => response.json())
         .then((data) => {
-          setAnalysis(data.analysis);
-          setdiaryUniqNum(data.id);
+          setServerLoadTodo(data.result);
           console.log("API response:", data);
         })
         .catch((error) => {

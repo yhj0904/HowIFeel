@@ -141,6 +141,9 @@ const StatisticsScreen = () => {
     <Container>
       <CardContainer>
         <Card style={{ transform: [{ scale: secondScale }] }}>
+        <Text style={{ fontSize: 20 }}>
+       {toDos[Object.keys(toDos)[0] + 1]?.date}
+      </Text>
       <Text style={{ fontSize: 98 }}>
        {moods[toDos[Object.keys(toDos)[0] + 1]?.analysis]}
       </Text>
@@ -155,6 +158,9 @@ const StatisticsScreen = () => {
             ],
           }}
         >
+          <Text style={{ fontSize: 20 }}>
+       {toDos[Object.keys(toDos)[0]]?.date}
+      </Text>
           <Text style={{ fontSize: 98 }}>
         {moods[toDos[Object.keys(toDos)[0]]?.analysis]}
       </Text>
