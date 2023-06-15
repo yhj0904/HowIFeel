@@ -228,17 +228,17 @@ const Search = () => {
                 <View style={styles.toDo}>
                   <Text style={{ fontSize: 36 }}>{moods[item.analysis]}</Text>
                   <View style={styles.buttonKey}>
-                    <TouchableOpacity onPress={() => checkdiary(key)}>
+                    <TouchableOpacity onPress={() => checkdiary(item.id)}>
                       <MaterialCommunityIcons
                         name="book-open-variant"
                         size={24}
                         color="grey"
                       />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => updateToDo(key)}>
+                    <TouchableOpacity onPress={() => updateToDo(item.id)}>
                       <Entypo name="pencil" size={24} color="grey" />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => deleteToDo(key)}>
+                    <TouchableOpacity onPress={() => deleteToDo(item.id)}>
                       <Fontisto name="trash" size={24} color="grey" />
                     </TouchableOpacity>
                   </View>

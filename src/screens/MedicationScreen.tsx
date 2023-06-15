@@ -12,7 +12,12 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import styled from "styled-components/native";
-import { Fontisto, Ionicons, MaterialCommunityIcons,FontAwesome5 } from "@expo/vector-icons";
+import {
+  Fontisto,
+  Ionicons,
+  MaterialCommunityIcons,
+  FontAwesome5,
+} from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthContext from "../contexts/AuthContext";
 import { useNavigation } from "@react-navigation/native";
@@ -45,10 +50,11 @@ const MedicationScreen = () => {
   const [selectedTimes, setSelectedTimes] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [mediInfoModalVisible, setMediInfoModalVisible] = useState(false);
+  const [mediInfoResults, setMediInfoResults] = useState({});
   const { isLoggedIn } = useContext(AuthContext);
   const STORAGE_KEY = determineStorageKey(isLoggedIn);
   const navigation = useNavigation();
-  
+
   const toggleTimeSelection = (time) => {
     if (selectedTimes.includes(time)) {
       setSelectedTimes(selectedTimes.filter((t) => t !== time));
@@ -57,14 +63,13 @@ const MedicationScreen = () => {
     }
   };
 
-
   const isTimeSelected = (time) => selectedTimes.includes(time);
 
   useEffect(() => {
     loadMedication();
   }, []);
-console.log(medications)
-console.log("randermediscreen")
+  console.log(medications);
+  console.log("randermediscreen");
   const saveMedication = async (toSave) => {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
   };
@@ -135,32 +140,31 @@ console.log("randermediscreen")
     setUniqueNumber("");
   };
 
-  const mediInfo = () => {
-    setMediInfoModalVisible(true);
-    <Modal
-    animationType="fade"
-    transparent={true}
-    visible={mediInfoModalVisible}
-  >
-    <ModalContainer>
-      <ModalContent>
-        <Text style={styles.medicationText}>{takeToMedi}</Text>
-        <Text style={styles.medicationText}>{sideEffect}</Text>
-        <Text style={styles.medicationText}>{cautionInfo}</Text>
-
-        <TouchableOpacity
-          onPress={() => {
-            setMediInfoModalVisible(false);
-          }}
-        >
-          <FontAwesome5 name="window-close" size={24} color="black" />
-        </TouchableOpacity>
-      </ModalContent>
-    </ModalContainer>
-  </Modal>
+  const mediInfo = (key) => {
+    fetch(`http://3.37.226.225:10021/api/drug/find`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        drugCode: key,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data && data.result) {
+          setMediInfoResults("");
+          setMediInfoResults({ [key]: data.result });
+          setMediInfoModalVisible(true);
+          console.log("API response:", data);
+        } else {
+          Alert.alert("해당하는 약물 코드는 존재하지 않습니다.");
+        }
+      })
+      .catch((error) => {
+        console.error("API error:", error);
+      });
   };
-  
-
 
   return (
     <View style={styles.container}>
@@ -264,11 +268,44 @@ console.log("randermediscreen")
         </View>
       </Modal>
 
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={mediInfoModalVisible}
+      >
+        <ModalContainer>
+          <ModalContent>
+          {Object.keys(mediInfoResults).map((key) => (
+          <View key={key}>
+            <Text style={styles.medicationText}>약물 이름: {mediInfoResults[key].drugName}</Text>
+            <Text style={styles.medicationText}>약물 코드: {mediInfoResults[key].drugCode}</Text>
+            <Text style={styles.medicationText}>제조사: {mediInfoResults[key].drugEntpName}</Text>
+            <Text style={styles.medicationText}>복용 방법: {mediInfoResults[key].drugHowTake}</Text>
+            <Text style={styles.medicationText}>부작용: {mediInfoResults[key].drugSideEffect}</Text>
+            <Text style={styles.medicationText}>주의 사항: {mediInfoResults[key].drugWarn}</Text>
+            <Text style={styles.medicationText}>저장한 시간: {mediInfoResults[key].insertDT}</Text>
+          </View>
+        ))}
+            <TouchableOpacity
+              onPress={() => {
+                setMediInfoModalVisible(false);
+              }}
+            >
+              <FontAwesome5 name="window-close" size={24} color="black" />
+            </TouchableOpacity>
+          </ModalContent>
+        </ModalContainer>
+      </Modal>
+
       <ScrollView>
         {Object.keys(medications).map((key) =>
           medications[key].key !== null ? (
             <View key={key} style={styles.medicationContainer}>
-              <TouchableOpacity onPress={() => { mediInfo }}>
+              <TouchableOpacity
+                onPress={() => {
+                  mediInfo(medications[key].uniqueNumber);
+                }}
+              >
                 <MaterialCommunityIcons name="pill" size={35} color="black" />
               </TouchableOpacity>
               <View>
